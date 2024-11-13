@@ -1,0 +1,138 @@
+name: CI - Chatbot Admin Dashboard pipeline
+
+on:
+  workflow_dispatch:
+  # push:
+  #   branches:
+  #     - devops
+  # pull_request:
+  #   branches:
+  #     - main
+env:
+  ACTIONS_RUNNER_DEBUG: true
+  AWS_REGION: eu-north-1
+  AWS_ACCOUNT_ID: 905418236735
+  AWS_ECR_REPO: 905418236735.dkr.ecr.eu-north-1.amazonaws.com/ai-competency/chatbot-admin-dashboard
+
+permissions:
+  id-token: write
+  contents: write
+  security-events: write
+  actions: read
+  pull-requests: write 
+
+jobs:
+  scan:
+    name: gitleaks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: devops
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build:
+    needs: scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4 # More information on this action can be found below in the 'AWS Credentials' section
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/github-oidc-role
+          aws-region: ${{ env.AWS_REGION }}
+
+      # - name: Amazon CodeGuru Reviewer
+      #   uses: aws-actions/codeguru-reviewer@v1.1
+      #   if: ${{ always() }}
+      #   continue-on-error: false
+      #   with:          
+      #     build_path: . # build artifact(s) directory
+      #     s3_bucket: codeguru-reviewer-chatbot-admin-dashboard
+
+      # - name: Store SARIF file
+      #   if: steps.iam-role.outcome == 'success'
+      #   uses: actions/upload-artifact@v2
+      #   with:
+      #     name: SARIF_recommendations
+      #     path: ./codeguru-results.sarif.json
+    
+      # - name: Upload review result
+      #   if: ${{ github.event_name != 'push' }}
+      #   uses: github/codeql-action/upload-sarif@v1
+      #   with:
+      #     sarif_file: codeguru-results.sarif.json
+
+      # - name: CodeGuru Security
+      #   uses: aws-actions/codeguru-security@v1
+      #   with:
+      #     source_path: .
+      #     aws_region: eu-north-1
+      #     fail_on_severity: Critical
+
+      # - name: Print findings
+      #   run: |
+      #     ls -l
+      #     cat codeguru-security-results.sarif.json
+
+      #     - name: Upload result
+      #     uses: github/codeql-action/upload-sarif@v2
+      #     with:
+      #       sarif_file: codeguru-security-results.sarif.json
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push docker image to Amazon ECR
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: ai-competency/chatbot-admin-dashboard
+          #IMAGE_TAG: ${{ github.sha }}
+          #IMAGE_TAG: ${{ github.run_number }}
+          IMAGE_TAG: latest
+        run: |
+          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
+          docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+
+      - name: Generate imagedefinitions.json
+        run: |
+          IMAGE_TAG=latest
+          echo '[{"name": "chatbot-admin-dashboar", "imageUri": "905418236735.dkr.ecr.eu-north-1.amazonaws.com/ai-competency/chatbot-admin-dashboard:'"$IMAGE_TAG"'"}]' > imagedefinitions.json
+
+      # - name: Commit imagedefinitions.json
+      #   run: |
+      #     git config --local user.name "41898282+github-actions[bot]@users.noreply.github.com"
+      #     git config --local user.email "github-actions[bot]"
+      #     git add imagedefinitions.json
+      #     git commit -m "Add imagedefinitions.json for CodePipeline"
+  
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref_name }}
+
+      # - name: Upload imagedefinitions.json
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: imagedefinitions
+      #     path: imagedefinitions.json
+
+      # - name: Upload imagedefinitions.json to S3
+      #   run: |
+      #     aws s3 cp imagedefinitions.json s3://codepipeline-eu-north-1-742759316953/ai-competency-chatbo/imagedefinitions.json
+
+      - name: Trigger CodePipeline
+        env:
+          AWS_REGION: eu-north-1
+        run: |
+          aws codepipeline start-pipeline-execution --name ai-competency-chatbot-admin-dashboard-v1
