@@ -1,0 +1,10 @@
+# NEXT_PUBLIC_API_ENDPOINT=http://localhost:6600/api
+NEXT_PUBLIC_API_ENDPOINT=http://chatbot-backend:8000/api
+# NEXT_PUBLIC_API_ENDPOINT=https://chatbot-server.sense-23.com/api
+NEXT_PUBLIC_BASE_URL=http://admin-dashboard:3000
+# NEXT_PUBLIC_BASE_URL=http://localhost
+# NEXT_PUBLIC_BASE_URL=https://chatbot-bo.sense-23.com
+NEXT_PUBLIC_SERVER_URL=http://backend-dev:8000
+# NEXT_PUBLIC_SERVER_URL=https://chatbot-server.sense-23.com
+
+NEXTAUTH_SECRET=secret
