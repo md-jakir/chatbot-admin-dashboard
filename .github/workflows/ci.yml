@@ -50,43 +50,43 @@ jobs:
           role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/github-oidc-role
           aws-region: ${{ env.AWS_REGION }}
 
-      # - name: Amazon CodeGuru Reviewer
-      #   uses: aws-actions/codeguru-reviewer@v1.1
-      #   if: ${{ always() }}
-      #   continue-on-error: false
-      #   with:          
-      #     build_path: . # build artifact(s) directory
-      #     s3_bucket: codeguru-reviewer-chatbot-admin-dashboard
+      - name: Amazon CodeGuru Reviewer
+        uses: aws-actions/codeguru-reviewer@v1.1
+        if: ${{ always() }}
+        continue-on-error: false
+        with:          
+          build_path: . # build artifact(s) directory
+          s3_bucket: codeguru-reviewer-chatbot-admin-dashboard
 
-      # - name: Store SARIF file
-      #   if: steps.iam-role.outcome == 'success'
-      #   uses: actions/upload-artifact@v2
-      #   with:
-      #     name: SARIF_recommendations
-      #     path: ./codeguru-results.sarif.json
+      - name: Store SARIF file
+        if: steps.iam-role.outcome == 'success'
+        uses: actions/upload-artifact@v2
+        with:
+          name: SARIF_recommendations
+          path: ./codeguru-results.sarif.json
     
-      # - name: Upload review result
-      #   if: ${{ github.event_name != 'push' }}
-      #   uses: github/codeql-action/upload-sarif@v1
-      #   with:
-      #     sarif_file: codeguru-results.sarif.json
+      - name: Upload review result
+        if: ${{ github.event_name != 'push' }}
+        uses: github/codeql-action/upload-sarif@v1
+        with:
+          sarif_file: codeguru-results.sarif.json
 
-      # - name: CodeGuru Security
-      #   uses: aws-actions/codeguru-security@v1
-      #   with:
-      #     source_path: .
-      #     aws_region: eu-north-1
-      #     fail_on_severity: Critical
+      - name: CodeGuru Security
+        uses: aws-actions/codeguru-security@v1
+        with:
+          source_path: .
+          aws_region: eu-north-1
+          fail_on_severity: Critical
 
-      # - name: Print findings
-      #   run: |
-      #     ls -l
-      #     cat codeguru-security-results.sarif.json
+      - name: Print findings
+        run: |
+          ls -l
+          cat codeguru-security-results.sarif.json
 
-      #     - name: Upload result
-      #     uses: github/codeql-action/upload-sarif@v2
-      #     with:
-      #       sarif_file: codeguru-security-results.sarif.json
+          - name: Upload result
+          uses: github/codeql-action/upload-sarif@v2
+          with:
+            sarif_file: codeguru-security-results.sarif.json
 
       - name: Login to Amazon ECR
         id: login-ecr
