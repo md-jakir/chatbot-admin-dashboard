@@ -9,21 +9,8 @@ WORKDIR /app
 
 # Copy the dependency files and install dependencies in a single layer
 COPY package.json yarn.lock ./
-
-# Install dependencies, run linting, unit tests, and build the app in one step to reduce layers
-# RUN yarn add -D jest jest-environment-jsdom @testing-library/react @testing-library/jest-dom \
-#     && yarn add @testing-library/jest-dom @testing-library/react --dev \
-#     && yarn add @babel/preset-react --dev \ 
-#     && yarn install --frozen-lockfile
-
-#RUN yarn install --frozen-lockfile
 RUN npm i
-
 COPY . .
-
-# Run linting, tests, and build the app in a single layer
-# RUN yarn lint \
-#     && yarn build
 
 RUN npm run build
 
