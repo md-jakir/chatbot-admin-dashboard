@@ -10,7 +10,7 @@ on:
   #     - main
 env:
   ACTIONS_RUNNER_DEBUG: true
-  AWS_REGION: ep-southeast-1
+  AWS_REGION: ap-southeast-1
   AWS_ACCOUNT_ID: 212945523191
   AWS_ECR_REPO: 212945523191.dkr.ecr.ap-southeast-1.amazonaws.com/chatbot-app/admin-dashboard
 
