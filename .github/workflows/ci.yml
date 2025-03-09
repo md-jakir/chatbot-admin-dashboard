@@ -13,6 +13,7 @@ env:
   AWS_REGION: ap-southeast-1
   AWS_ACCOUNT_ID: 212945523191
   AWS_ECR_REPO: 212945523191.dkr.ecr.ap-southeast-1.amazonaws.com/chatbot-app/admin-dashboard
+  IMAGE_TAG: latest
 
 permissions:
   id-token: write
@@ -70,7 +71,7 @@ jobs:
       - name: Generate imagedefinitions.json
         run: |
           IMAGE_TAG=latest
-          echo '[{"name": "chatbot-admin-dashboar", "imageUri": "905418236735.dkr.ecr.eu-north-1.amazonaws.com/ai-competency/chatbot-admin-dashboard:'"$IMAGE_TAG"'"}]' > imagedefinitions.json
+          echo '[{"name": "chatbot-admin-dashboar", "imageUri": "212945523191.dkr.ecr.ap-southeast-1.amazonaws.com/chatbot-app/admin-dashboard:'"$IMAGE_TAG"'"}]' > imagedefinitions.json
 
       - name: Upload imagedefinitions.json
         uses: actions/upload-artifact@v4
